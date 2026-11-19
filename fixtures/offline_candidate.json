@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "round_id": 1,
+  "config": {
+    "grant_id": "grant-001",
+    "repo_owner": "demo-owner",
+    "repo_name": "demo-repo",
+    "repo_id": 123,
+    "window_start": 1000,
+    "window_end": 2000,
+    "min_stable_releases": 2,
+    "beneficiary": "0x1111111111111111111111111111111111111111",
+    "reward_credits": 100,
+    "rule_version": 1
+  },
+  "releases": [
+    {"id": 10, "published_at": 1000, "draft": false, "prerelease": false},
+    {"id": 11, "published_at": 1500, "draft": false, "prerelease": false},
+    {"id": 12, "published_at": 1600, "draft": false, "prerelease": true}
+  ],
+  "stable_count": 2
+}
