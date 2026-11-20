@@ -1,0 +1,6 @@
+[
+  {"id": 12, "published_at": "1970-01-01T08:26:40+08:00", "draft": false, "prerelease": true, "tag_name": "v2.0.0-rc1"},
+  {"id": 10, "published_at": "1970-01-01T00:16:40Z", "draft": false, "prerelease": false},
+  {"id": 13, "published_at": "1970-01-01T00:33:20Z", "draft": true, "prerelease": false},
+  {"id": 14, "published_at": null, "draft": true, "prerelease": false}
+]
