@@ -2,6 +2,8 @@
 
 CS5298 三人项目。`feature/b-integration` 分支已实现 GitHub 发布观察、候选验证、四节点委员会认证、共享快照和一次领取。2026-11-22 在本地四节点 devnet 跑通正例、空窗口、低于阈值拒绝和领取错误路径。详细记录见 [B 的贡献与验证](docs/contribution-b.md)。本分支尚未合并到 main，A/C 仍需审阅跨成员改动。
 
+`feature/frontend` 分支增加了[本地演示页面](frontend/README.md)，可查看四节点观察、候选和快照，并通过浏览器钱包执行配置与领取。页面依赖包含 B/C 联调接口的部署。
+
 ## 三个人在哪里写代码
 
 | 成员 | 普通 Rust 逻辑 | Lyquor 对外入口 |

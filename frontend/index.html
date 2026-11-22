@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071521">
+  <title>GrantsTrace · 四节点认证控制台</title>
+  <meta name="description" content="查看 GitHub Releases 观察、委员会认证和资助领取状态。">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">G<span>·</span></span><div><strong>GrantsTrace</strong><small>RELEASE ORACLE CONSOLE</small></div></div>
+      <div class="top-actions"><span id="network-pill" class="pill"><span class="dot"></span>等待连接</span><button id="wallet-button" class="button ghost" type="button">连接钱包</button></div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <div><p class="eyebrow">LIVE DEVNET / 4 NODES</p><h1>让开源发布记录<br><em>变成可信的资助依据。</em></h1><p class="lead">四个节点独立观察 GitHub Releases。至少三个节点认可同一候选后，认证快照写入共享状态，受益账户才能领取积分。</p></div>
+        <div class="hero-aside"><span>当前工作流</span><div class="flow"><b>01 观察</b><i></i><b>02 认证</b><i></i><b>03 领取</b></div><p>这个页面直接连接本地 Lyquor RPC。写入共享状态的操作由浏览器钱包签名。</p></div>
+      </section>
+
+      <section class="settings panel" aria-labelledby="connection-title">
+        <div class="section-head"><div><p class="eyebrow">CONNECTION</p><h2 id="connection-title">连接本地部署</h2></div><button id="refresh-all-button" class="button primary" type="button">刷新全部状态</button></div>
+        <div class="settings-grid"><label class="field span-2">Lyquid 合约地址<input id="contract-address" spellcheck="false" autocomplete="off" placeholder="0x…，来自 shaker deploy"></label><label class="field">节点 1 RPC<input id="rpc-0" spellcheck="false"></label><label class="field">节点 2 RPC<input id="rpc-1" spellcheck="false"></label><label class="field">节点 3 RPC<input id="rpc-2" spellcheck="false"></label><label class="field">节点 4 RPC<input id="rpc-3" spellcheck="false"></label></div>
+        <p class="hint">默认连接本机 10087、11087、12087、13087 端口。部署地址会保存在此浏览器中。</p>
+      </section>
+
+      <section class="metrics" aria-label="共享状态概要">
+        <article class="metric"><span>当前轮次</span><strong id="metric-round">—</strong><small>Network State</small></article>
+        <article class="metric"><span>正式发布数</span><strong id="metric-stable">—</strong><small>认证快照</small></article>
+        <article class="metric"><span>认证签名者</span><strong id="metric-signers">—</strong><small>门槛 3 / 4</small></article>
+        <article class="metric"><span>资助资格</span><strong id="metric-eligible">—</strong><small id="metric-credits">积分 —</small></article>
+      </section>
+
+      <section class="section-block" aria-labelledby="nodes-title">
+        <div class="section-head"><div><p class="eyebrow">INDEPENDENT OBSERVATION</p><h2 id="nodes-title">四节点观察</h2><p class="subhead">每个节点单独读取 GitHub；只有当前轮次的 ready 候选可参与认证。</p></div><button id="observe-all-button" class="button secondary" type="button">依次刷新四节点</button></div>
+        <div id="node-grid" class="node-grid"></div>
+      </section>
+
+      <div class="two-column">
+        <section class="panel" aria-labelledby="candidate-title"><div class="section-head"><div><p class="eyebrow">CANDIDATE</p><h2 id="candidate-title">候选依据</h2></div><span id="candidate-status" class="badge muted">等待观察</span></div><div id="candidate-content" class="empty">选择节点并刷新后，这里会显示参与认证的 Release 记录。</div></section>
+        <section class="panel" aria-labelledby="committee-title"><div class="section-head"><div><p class="eyebrow">ORACLE COMMITTEE</p><h2 id="committee-title">委员会认证</h2></div><span id="committee-status" class="badge muted">未读取</span></div><div id="committee-content" class="empty">读取委员会状态后显示成员与阈值。</div><div class="action-row"><button id="certify-button" class="button primary" type="button">从节点 1 发起认证</button></div><p class="hint">提交成功后仍会轮询最终快照；submitted=true 本身不代表认证完成。</p></section>
+      </div>
+
+      <div class="two-column lower">
+        <section class="panel" aria-labelledby="snapshot-title"><div class="section-head"><div><p class="eyebrow">CERTIFIED RESULT</p><h2 id="snapshot-title">共享快照与领取</h2></div><span id="claim-status" class="badge muted">未读取</span></div><div id="snapshot-content" class="empty">最终认证结果会保存在 Network State。</div><div class="action-row"><button id="claim-button" class="button secondary" type="button">用当前钱包领取积分</button></div></section>
+        <section class="panel" aria-labelledby="admin-title"><div class="section-head"><div><p class="eyebrow">ADMIN OPERATIONS</p><h2 id="admin-title">初始化与新轮次</h2></div></div><details><summary>资助配置</summary><label class="field">GrantConfig JSON<textarea id="grant-config" rows="11" spellcheck="false"></textarea></label><button id="configure-grant-button" class="button secondary" type="button">钱包签名配置</button></details><details><summary>委员会配置与激活</summary><label class="field">四个 Node ID 的 JSON 数组<textarea id="node-ids" rows="5" spellcheck="false" placeholder='["Node-…", "Node-…", "Node-…", "Node-…"]'></textarea></label><button id="configure-committee-button" class="button secondary" type="button">钱包签名配置委员会</button><label class="field">Lyquid LVM 目标地址<input id="lyquid-target" spellcheck="false" placeholder="shaker to-hex LYQUID_ID 的输出"></label><button id="activate-committee-button" class="button secondary" type="button">推进并激活委员会 epoch</button></details><div class="action-row"><button id="start-round-button" class="button secondary" type="button">开启下一轮</button></div><p class="hint">管理员钱包必须是部署者。每笔交易结束后页面会查询实际状态，而不只看交易回执。</p></section>
+      </div>
+
+      <section class="panel log-panel" aria-labelledby="log-title"><div class="section-head"><div><p class="eyebrow">ACTIVITY</p><h2 id="log-title">操作记录</h2></div><button id="clear-log-button" class="button text" type="button">清空</button></div><ol id="activity-log" aria-live="polite"><li>准备连接本地节点。</li></ol></section>
+    </main>
+    <footer><span>GrantsTrace · CS5298</span><span>本地四节点原型 · GitHub Releases → 3/4 认证 → 一次领取</span></footer>
+  </div>
+</body>
+</html>
