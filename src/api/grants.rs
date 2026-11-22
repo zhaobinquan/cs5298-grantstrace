@@ -28,7 +28,11 @@ fn start_round(ctx: &mut _) -> LyquidResult<u64> {
 fn accept_snapshot(ctx: &mut _, candidate_json: String) -> LyquidResult<bool> {
     let candidate = verification::candidate_from_json(&candidate_json).map_err(to_lyquid_error)?;
     let signer_ids = ctx.cert.signers.clone();
-    let signers = signer_ids.into_iter().filter_map(|id| ctx.signer_node_id(id as u64)).map(|id| id.to_string()).collect();
+    let signers = signer_ids
+        .into_iter()
+        .map(|id| ctx.signer_node_id(id as u64).map(|node| node.to_string()))
+        .collect::<Option<Vec<_>>>()
+        .ok_or_else(|| to_lyquid_error(AppError::new(error_codes::E_INTERNAL, "unresolved signer ID", false)))?;
     *ctx.network.grant = grants::apply_snapshot(&ctx.network.grant, candidate, signers).map_err(to_lyquid_error)?;
     Ok(true)
 }
