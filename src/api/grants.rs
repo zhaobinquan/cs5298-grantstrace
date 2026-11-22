@@ -8,21 +8,33 @@ fn constructor(ctx: &mut _) {
 
 #[method::network(export = eth)]
 fn configure_grant(ctx: &mut _, config_json: String) -> LyquidResult<bool> {
-    let _ = (&ctx, config_json);
-    unfinished_lyquid("configure_grant")
+    if ctx.caller != *ctx.network.admin { return Err(to_lyquid_error(AppError::new(error_codes::E_UNAUTHORIZED, "admin only", false))); }
+    let config: GrantConfig = serde_json::from_str(&config_json).map_err(|e| to_lyquid_error(AppError::new(error_codes::E_JSON, e.to_string(), false)))?;
+    *ctx.network.grant = grants::initialize_grant(&ctx.network.grant, config).map_err(to_lyquid_error)?;
+    Ok(true)
 }
 
 #[method::network(export = eth)]
 fn start_round(ctx: &mut _) -> LyquidResult<u64> {
-    let _ = ctx;
-    unfinished_lyquid("start_round")
+    if ctx.caller != *ctx.network.admin { return Err(to_lyquid_error(AppError::new(error_codes::E_UNAUTHORIZED, "admin only", false))); }
+    let next = grants::advance_round(&ctx.network.grant).map_err(to_lyquid_error)?;
+    let round = next.round_id;
+    *ctx.network.grant = next;
+    Ok(round)
 }
 
 // No export=eth: callers must go through the LDK's certified route.
 #[method::network(group = oracle::certified::releases)]
 fn accept_snapshot(ctx: &mut _, candidate_json: String) -> LyquidResult<bool> {
-    let _ = (&ctx, candidate_json);
-    unfinished_lyquid("accept_snapshot")
+    let candidate = verification::candidate_from_json(&candidate_json).map_err(to_lyquid_error)?;
+    let signer_ids = ctx.cert.signers.clone();
+    let signers = signer_ids
+        .into_iter()
+        .map(|id| ctx.signer_node_id(id as u64).map(|node| node.to_string()))
+        .collect::<Option<Vec<_>>>()
+        .ok_or_else(|| to_lyquid_error(AppError::new(error_codes::E_INTERNAL, "unresolved signer ID", false)))?;
+    *ctx.network.grant = grants::apply_snapshot(&ctx.network.grant, candidate, signers).map_err(to_lyquid_error)?;
+    Ok(true)
 }
 
 #[method::network(export = eth)]
@@ -38,6 +50,9 @@ fn get_grant_status(ctx: &_) -> LyquidResult<String> {
 
 #[method::network(export = eth)]
 fn claim(ctx: &mut _) -> LyquidResult<u64> {
-    let _ = ctx;
-    unfinished_lyquid("claim")
+    let caller = ctx.caller.to_string().to_ascii_lowercase();
+    let next = grants::apply_claim(&ctx.network.grant, &caller).map_err(to_lyquid_error)?;
+    let credits = next.credits;
+    *ctx.network.grant = next;
+    Ok(credits)
 }

@@ -1,5 +1,4 @@
-//! GrantsTrace scaffold: shared contract and fail-closed entry points.
-//! Business modules are intentionally incomplete; see README.md.
+//! GrantsTrace shared state and API entry points.
 
 use lyquid::prelude::*;
 use model::*;
@@ -18,14 +17,6 @@ state! {
 
 fn to_lyquid_error(error: AppError) -> LyquidError {
     LyquidError::LyquidRuntime(error.to_string().into())
-}
-
-fn unfinished_lyquid<T>(function: &str) -> LyquidResult<T> {
-    Err(to_lyquid_error(AppError::not_implemented(function)))
-}
-
-fn unfinished_json<T: serde::Serialize>(function: &str) -> LyquidResult<String> {
-    api_to_json(&api_error::<T>(AppError::not_implemented(function))).map_err(to_lyquid_error)
 }
 
 // These files are expanded at crate root. Do not add repeated top-level imports in them.
