@@ -2,6 +2,10 @@
 
 ## 代码职责
 
+2026-11-22 新分支 `feature/b-integration` 补齐 `src/api/verification.rs`：候选查询、管理员委员会配置、委员会状态、单阶段验证钩子与认证提交。为使认证结果可消费，同分支也补齐 C 的配置、轮次、认证接收和领取状态转换；这些改动需由 C 审阅。
+
+`scripts/committee.sh` 仅完成委员会 staging；epoch 激活仍须按实际部署的 LDK 命令执行并核验。`scripts/certify.sh` 为调用参考，需在四节点 devnet 上核对 ABI 与入口类别。
+
 - 在 `src/verification.rs` 实现候选结果的构建、验证、JSON 编解码和本节点观察结果比对。
 - 候选构建会筛选固定时间窗口、按 Release ID 规范排序、去除完全相同的重复记录，并拒绝内容冲突的重复 ID。
 - 候选验证会核对 schema、轮次、完整配置、窗口范围、严格 ID 顺序、稳定版本计数和 16 KiB JSON 上限。
