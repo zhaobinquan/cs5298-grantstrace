@@ -4,7 +4,17 @@
 
 2026-11-22 新分支 `feature/b-integration` 补齐 `src/api/verification.rs`：候选查询、管理员委员会配置、委员会状态、单阶段验证钩子与认证提交。为使认证结果可消费，同分支也补齐 C 的配置、轮次、认证接收和领取状态转换；这些改动需由 C 审阅。
 
-`scripts/committee.sh` 仅完成委员会 staging；epoch 激活仍须按实际部署的 LDK 命令执行并核验。`scripts/certify.sh` 为调用参考，需在四节点 devnet 上核对 ABI 与入口类别。
+`scripts/committee.sh` 已加入 epoch 激活调用与状态轮询；`scripts/certify.sh` 已改用 Instance 的 `cast call` 并轮询最终快照。两份脚本仍需在新部署上完整实测。
+
+## 2026-11-22 四节点实测
+
+- macOS Docker Desktop 启动后 `docker info` 返回 ServerVersion 29.9.2；四个 Lyquor 节点、Anvil 和 registry 均启动，setup-devnet 退出码为 0。
+- `shaker deploy` 已在本地 devnet 部署分支版本；初始化状态查询返回空配置、空快照。
+- `configure_committee` 将四个实际 Node ID 与阈值 3 写入 staging；对 Lyquid ID 转换得到的地址调用 `__lyquor_oracle_advance_epoch` 与 `__lyquor_oracle_finalize_epoch` 后，节点 1 和节点 2 查询均为 `configured=true, active=true, threshold=3`。
+- `configure_grant` 与 `start_round` 交易已由共享状态查询确认，当前轮次为 1。
+- 四节点 `refresh_observation()` 均返回 `E_HTTP`：Lyquor Host HTTP 无法向 GitHub API 发出请求；同一 Docker 网络的工具容器 `curl -I https://api.github.com` 返回 HTTP 200。根因尚未定位，因此正例认证、错误提案、两节点批准不足实验未完成。
+- 无候选时 `request_certification()` 返回 `E_NOT_READY`；没有产生认证快照。
+- 本轮 `cargo check --locked` 成功，`shaker test Cargo.toml` 为 34 passed、0 failed。更新后的委员会和认证脚本通过 `bash -n`，但完整脚本尚未在一份全新部署上跑通。
 
 - 在 `src/verification.rs` 实现候选结果的构建、验证、JSON 编解码和本节点观察结果比对。
 - 候选构建会筛选固定时间窗口、按 Release ID 规范排序、去除完全相同的重复记录，并拒绝内容冲突的重复 ID。

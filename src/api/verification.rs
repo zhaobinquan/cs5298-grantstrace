@@ -95,7 +95,7 @@ fn validate(
 ) -> LyquidResult<bool> {
     if target.seq_id != lyquor_api::sequence_backend_id()? || !matches!(target.target, OracleServiceTarget::LVM(id) if id == ctx.lyquid_id)
         || params.method != "accept_snapshot" || params.group != "releases" || params.origin != Address::ZERO
-        || params.caller != Address::from(ctx.lyquid_id) || !extra.is_empty() {
+        || params.caller != Address::from(ctx.lyquid_id) || params.abi != lyquid::lyquor_primitives::InputABI::Lyquor || !extra.is_empty() {
         return Ok(false);
     }
     let Some(decoded) = decode_by_fields!(&params.input, candidate_json: String) else { return Ok(false) };
