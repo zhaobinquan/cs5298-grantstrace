@@ -45,3 +45,10 @@
 | Guest 单元测试 | shaker test Cargo.toml | 修正注册后实际执行 5 项，5 passed、0 failed，退出码 0，2026-11-19 |
 | 默认共享状态查询 | 部署后核对生成 ABI | 待填写 |
 
+
+
+## 2026-11-22 C 本机更新
+
+以上“Cargo.lock 不包含”“部署未执行”是旧骨架阶段的历史记录。当前仓库已包含锁文件，本次未修改依赖版本。Docker Desktop 的 Ubuntu WSL integration 启用后，已用独立 Compose project `grantstrace-c-devnet` 启动四节点（节点 0.8.4+54c5e11）并实际部署、认证、领取。WSL 中 Docker Engine 为 29.9.2；Rust/Cargo 1.99.0、Shaker 0.8.4+54c5e11、Cast 1.7.1。
+
+本地 registry 请求必须绕开代理；本次使用 `NO_PROXY=127.0.0.1,localhost` 和小写对应变量，没有修改系统代理。测试 node1 通过 `/tmp/grantstrace-c-logging.yaml` 启用 `LYQUOR_LOG=debug` 取得拒绝错误码；重建该测试容器时保留数据卷。GitHub core 配额曾耗尽并中断验收，恢复后已在当前版本分段完成合格、不合格及全新 e2e 部署，详情见 contribution-c.md。

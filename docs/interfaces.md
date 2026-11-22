@@ -1,6 +1,6 @@
 # GrantsTrace 接口契约 v1
 
-以下复制自小组三人实施方案第 8 节。字段、方法、分工不变；下列是最终功能规范，当前骨架尚未完成业务。
+以下复制自小组三人实施方案第 8 节。业务字段、方法签名保持兼容；下列为功能规范。2026-11-22 C 接入 B 集成提交后的实现和实测状态见 contribution-c.md。
 
 ## 8. 固定接口与数据契约 v1
 
@@ -232,3 +232,16 @@ B 预期输出的 releases 为 10、11、12，stable_count=2。变换输入顺�
 
 契约修改只在发现明确错误或平台限制时进行，由 C 维护本节对应的 model.rs 与 interfaces.md，并在提交说明列出受影响调用。正常开发不需要另开数据结构设计会议。
 
+
+
+## 2026-11-22 C 集成补充：平台适配与状态布局
+
+- 新增内部 Network 状态 `committee_nodes: Vec<String>`，初始为空。首次 `start_round` 时从已经激活且与 staging 一致的 3/4 委员会固定四个规范化 Node ID；之后开轮要求委员会保持一致。没有新增业务 JSON 字段或改变任何业务 ABI 签名；持久状态布局发生变化，本版本须新部署，不承诺旧部署原地升级。
+- LDK 0.8.4 自动导出的 `__lyquor_oracle_initialize` 在首次激活前可替换平台 staging，单靠项目包装函数不能禁止这一平台能力。应用独立保存批准的节点集合，C 的开轮和最终接收核对实际委员会恰为该集合及阈值 3；B 的原有查询、提交和验证钩子保持不变。内置入口不能重写应用的 pin；偏离配置会被业务拒绝。creator 仍能破坏激活可用性，不能宣称可抵抗恶意部署管理员。
+- `accept_snapshot` 仍只存在于 `oracle::certified::releases`。除 LDK 自动验签外，接收端检查固定 origin/caller、当前 source 委员会、证书 config hash/epoch 和当前配置/轮次。没有添加普通入账入口。
+- 锁定 LDK 的 `verify_oracle_cert_signatures` 仅验前 `threshold` 个签名。因此本版本只从真实 `ctx.cert.signers` 的前三个已验签 ID 解析、排序并保存 signer Node ID；不把附带的第四个 ID 当作额外签名证据。纯状态函数仍兼容 3–4 个已验证、去重后的 signer，运行时输出固定记录已验证的三个。
+- C 的开轮若委员会尚未激活或不匹配返回 `E_COMMITTEE_NOT_READY`；B 的认证入口错误码保持原实现。提交结果不确定时先查询共享状态。
+- B 的 `get_candidate` 在未就绪或旧轮返回 `E_NOT_READY`。配置冻结后的重新配置返回 `E_FINALIZED`，配置后尚未冻结的重复配置返回 `E_ALREADY_CONFIGURED`。
+- CLI 接口和 A/B/C 适配器参数以 `scripts/README.md` 为准。C 的独立适配脚本分别确认 staging、目标 epoch 和四节点 active，不能只判断调用返回的交易回执。
+
+平台依据：Cargo.lock 固定 LDK `47a5ce17ea756af1946a5bc0f71d01b32b3b4242` 的 `lyquid/src/runtime/oracle/{mod,source,dest}.rs`、`runtime/syntax.rs` 与实际生成 Solidity ABI。没有修改 LDK 缓存或版本。
