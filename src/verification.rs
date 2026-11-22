@@ -293,7 +293,7 @@ mod tests {
     }
 
     #[lyquid_test::test]
-    fn verify_observation_rejects_a_different_local_candidate() {
+    fn verify_observation_rejects_different_records_with_the_same_count() {
         let proposed = build_candidate(&config(), 1, &[release(10, 1_000, false, false)]).unwrap();
         let local = ObservationState {
             round_id: 1,
