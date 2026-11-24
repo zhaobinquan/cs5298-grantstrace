@@ -10,6 +10,8 @@
 *.pem
 *.key
 *.log
+__pycache__/
+/history/
 .DS_Store
 Thumbs.db
 /.cargo-generate.toml
