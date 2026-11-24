@@ -149,7 +149,7 @@ function renderMetrics() {
   $('metric-round').textContent = grant?.round_id ?? '—';
   $('metric-stable').textContent = snapshot?.candidate?.stable_count ?? '—';
   $('metric-signers').textContent = snapshot ? `${snapshot.signer_node_ids.length} / 4` : '—';
-  $('metric-eligible').textContent = state.grant ? (state.grant.eligible ? '已满足' : '未满足') : '—';
+  $('metric-eligible').textContent = !state.grant ? '—' : !snapshot ? '待认证' : state.grant.eligible ? '已满足' : '未满足';
   $('metric-credits').textContent = `积分 ${grant?.credits ?? '—'}`;
 }
 function renderNodes() {
@@ -189,8 +189,8 @@ function renderCommittee() {
 function renderSnapshot() {
   const grant = state.grant?.state;
   const snapshot = grant?.snapshot;
-  $('claim-status').className = `badge ${grant?.claimed ? 'good' : snapshot ? 'muted' : 'muted'}`;
-  $('claim-status').textContent = grant?.claimed ? '已领取' : snapshot ? '待领取' : '未认证';
+  $('claim-status').className = `badge ${grant?.claimed ? 'good' : snapshot && !state.grant?.eligible ? 'bad' : 'muted'}`;
+  $('claim-status').textContent = grant?.claimed ? '已领取' : !snapshot ? '未认证' : state.grant.eligible ? '待领取' : '不符合领取条件';
   $('snapshot-content').className = snapshot ? '' : 'empty';
   $('snapshot-content').innerHTML = snapshot ? row('正式发布数', snapshot.candidate.stable_count)
     + row('受益人', short(snapshot.candidate.config.beneficiary, 14, 10))
