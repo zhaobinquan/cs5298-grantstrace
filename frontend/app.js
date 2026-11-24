@@ -232,12 +232,15 @@ async function observeAll() {
 }
 async function waitFor(predicate, label, timeoutMs = 60000) {
   const deadline = Date.now() + timeoutMs;
+  let lastError;
   while (Date.now() < deadline) {
-    await refreshAll();
-    if (predicate()) return;
+    try {
+      await refreshAll();
+      if (predicate()) return;
+    } catch (error) { lastError = error; }
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
-  throw new Error(`${label}在 60 秒内未被状态确认，请先检查共享状态再重试`);
+  throw new Error(`${label}在 60 秒内未被状态确认${lastError ? `：${lastError.message}` : '，请先检查共享状态再重试'}`);
 }
 async function certify() {
   const submission = dataOf(await read(0, METHODS.certify));
