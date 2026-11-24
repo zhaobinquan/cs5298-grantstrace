@@ -10,6 +10,7 @@ const DEFAULT_ADDRESS = '0x70e0ba845a1a0f2da3359c97e0285013525ffc49';
 const STORAGE_KEY = 'grantstrace-frontend-v1';
 const $ = id => document.getElementById(id);
 const state = { grant: null, committee: null, observations: [null, null, null, null], candidate: null, account: null, local: null, busy: false };
+let feedbackTimer;
 
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -48,6 +49,14 @@ function log(message, fail = false) {
   if (fail) li.className = 'fail';
   $('activity-log').prepend(li);
 }
+function feedback(message, kind) {
+  clearTimeout(feedbackTimer);
+  const element = $('action-feedback');
+  element.textContent = message;
+  element.className = `action-feedback ${kind}`;
+  element.hidden = false;
+  if (kind !== 'working') feedbackTimer = setTimeout(() => { element.hidden = true; }, kind === 'error' ? 12000 : 6000);
+}
 function setBusy(busy) {
   state.busy = busy;
   document.querySelectorAll('button').forEach(button => {
@@ -55,11 +64,12 @@ function setBusy(busy) {
   });
 }
 async function run(label, task) {
-  if (state.busy) return;
+  if (state.busy) { feedback('另一项操作正在进行，请稍候', 'working'); return; }
   setBusy(true);
   log(`${label}开始`);
-  try { await task(); log(`${label}完成`); }
-  catch (error) { log(`${label}失败：${error.message}`, true); }
+  feedback(`${label}进行中…`, 'working');
+  try { await task(); log(`${label}完成`); feedback(`${label}完成`, 'success'); }
+  catch (error) { log(`${label}失败：${error.message}`, true); feedback(`${label}失败：${error.message}`, 'error'); }
   finally { setBusy(false); }
 }
 function strip0x(value) { return value.startsWith('0x') ? value.slice(2) : value; }
