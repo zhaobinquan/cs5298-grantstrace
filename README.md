@@ -2,6 +2,8 @@
 
 CS5298 三人项目。B 的 PR #1 已将 GitHub 发布观察、候选验证、四节点委员会认证、共享快照和一次领取整合进 `main`（合并提交 `5ed4fb1`）。2026-11-22 在本地四节点 devnet 跑通正例、空窗口、低于阈值拒绝和领取错误路径。详细记录见 [B 的贡献与验证](docs/contribution-b.md)。C 已在包含 A 的 B 集成提交 `47eb9cb` 上接手完善，补充修改放在 `feature/c-integration` 分支供 PR 审阅，尚未合并到 `main`。C 的代码、脚本及本机验证见 [C 的贡献记录](docs/contribution-c.md)。
 
+`feature/frontend` 分支包含 C 的当前集成代码，并增加了[本地演示页面](frontend/README.md)。页面可新建部署、查看四节点观察与认证快照、完成配置和领取，并运行真实四节点验收脚本；本地演示服务使用标准 devnet 测试账户签名。
+
 ## 三个人在哪里写代码
 
 | 成员 | 普通 Rust 逻辑 | Lyquor 对外入口 |

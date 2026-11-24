@@ -11,6 +11,7 @@
 *.key
 *.log
 __pycache__/
+/frontend/.local-deploy.json
 /history/
 .DS_Store
 Thumbs.db
