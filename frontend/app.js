@@ -9,7 +9,7 @@ const DEFAULT_RPCS = [10087, 11087, 12087, 13087].map(port => `http://127.0.0.1:
 const DEFAULT_ADDRESS = '0x70e0ba845a1a0f2da3359c97e0285013525ffc49';
 const STORAGE_KEY = 'grantstrace-frontend-v1';
 const $ = id => document.getElementById(id);
-const state = { grant: null, committee: null, observations: [null, null, null, null], candidate: null, account: null, busy: false };
+const state = { grant: null, committee: null, observations: [null, null, null, null], candidate: null, account: null, local: null, busy: false };
 
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -236,6 +236,7 @@ async function certify() {
   await waitFor(() => state.grant?.state?.snapshot?.candidate?.round_id === submission.round_id, '认证快照');
 }
 async function connectWallet() {
+  if (state.local?.demo_signing) { log('本地演示签名已启用：管理员和受益人使用不同的标准 devnet 测试账户'); return; }
   if (!window.ethereum) throw new Error('未检测到浏览器钱包；请安装 MetaMask 等 EIP-1193 钱包');
   const accounts = await window.ethereum.request({method:'eth_requestAccounts'});
   if (!accounts?.length) throw new Error('钱包没有提供账户');
@@ -257,6 +258,24 @@ async function ensureWalletNetwork() {
   }
 }
 async function send(selector, args = []) {
+  if (state.local?.demo_signing) {
+    const current = config();
+    if (current.rpcs.some((rpc, i) => rpc !== DEFAULT_RPCS[i])) throw new Error('本地演示签名只支持页面默认的四个 RPC 端口');
+    const actions = {
+      [METHODS.configureGrant]: 'configureGrant', [METHODS.configureCommittee]: 'configureCommittee',
+      [METHODS.startRound]: 'startRound', [METHODS.claim]: 'claim',
+      [METHODS.advanceEpoch]: 'advanceEpoch', [METHODS.finalizeEpoch]: 'finalizeEpoch',
+    };
+    const action = actions[selector];
+    if (!action) throw new Error('不支持的本地签名操作');
+    const payload = {action, address: current.address};
+    if (action === 'configureGrant' || action === 'configureCommittee') payload.value = args[0].value;
+    if (action === 'advanceEpoch' || action === 'finalizeEpoch') payload.target = args[1].value;
+    const result = await localPost('/local/send', payload);
+    log(result.hash ? `本地测试交易已发送：${short(result.hash, 14, 10)}。等待业务状态确认`
+      : `委员会 epoch 操作已提交，等待节点状态确认`);
+    return result.hash || result.submitted;
+  }
   await ensureWalletNetwork();
   const {address} = config();
   const hash = await window.ethereum.request({method:'eth_sendTransaction',params:[{from:state.account,to:address,data:encodeCall(selector,args)}]});
@@ -290,6 +309,7 @@ async function activateCommittee() {
 async function startRound() {
   const previous = Number(state.grant?.state?.round_id ?? 0);
   if (!state.grant?.state?.config) throw new Error('请先配置资助项目');
+  if (!state.committee?.active) throw new Error('请先激活四节点委员会');
   await send(METHODS.startRound);
   await waitFor(() => Number(state.grant?.state?.round_id ?? 0) > previous, '新轮次');
 }
@@ -297,14 +317,77 @@ async function claim() {
   if (!state.grant?.eligible) throw new Error('当前快照尚未满足领取条件');
   if (state.grant.state.claimed) throw new Error('积分已领取');
   const beneficiary = state.grant.state.config?.beneficiary;
-  await ensureWalletNetwork();
-  if (state.account.toLowerCase() !== beneficiary?.toLowerCase()) throw new Error('当前钱包不是固定受益账户');
+  if (state.local?.demo_signing) {
+    if (state.local.beneficiary !== beneficiary?.toLowerCase()) throw new Error('配置的受益人不是本地演示账户');
+  } else {
+    await ensureWalletNetwork();
+    if (state.account.toLowerCase() !== beneficiary?.toLowerCase()) throw new Error('当前钱包不是固定受益账户');
+  }
   await send(METHODS.claim);
   await waitFor(() => Boolean(state.grant?.state?.claimed), '积分领取');
+}
+async function localPost(path, payload) {
+  const response = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+  const result = await response.json();
+  if (!response.ok || !result.ok) throw new Error(result.error || `本地服务 HTTP ${response.status}`);
+  return result.data;
+}
+async function bootstrapLocal() {
+  try {
+    const response = await fetch('/local/status');
+    if (!response.ok) return;
+    const result = await response.json();
+    if (!result.ok) return;
+    state.local = result;
+    $('node-ids').value = JSON.stringify(result.node_ids, null, 2);
+    if (result.last_deploy && $('contract-address').value === DEFAULT_ADDRESS) {
+      $('contract-address').value = result.last_deploy.contract;
+      $('lyquid-target').value = result.last_deploy.target;
+      saveConfig();
+    }
+    if (result.demo_signing) {
+      $('wallet-button').textContent = '本地测试账户';
+      const current = JSON.parse($('grant-config').value);
+      current.beneficiary = result.beneficiary;
+      $('grant-config').value = JSON.stringify(current, null, 2);
+      log('本地演示签名就绪；私钥只保存在本机服务进程中');
+    }
+  } catch (_) { /* The static page also works with a browser wallet. */ }
+}
+async function deployLocal() {
+  if (!state.local?.demo_signing) throw new Error('请通过 scripts/frontend.sh 启动本地演示服务');
+  const result = await localPost('/local/deploy', {});
+  $('contract-address').value = result.contract;
+  $('lyquid-target').value = result.target;
+  saveConfig();
+  log(`新部署 ${result.lyquid_id}，合约 ${result.contract}`);
+  await waitFor(() => Boolean(state.grant?.state), '新部署');
+}
+async function runAcceptance() {
+  if (!state.local?.demo_signing) throw new Error('完整验收需要本地演示服务');
+  const configValue = JSON.parse($('grant-config').value);
+  const ids = JSON.parse($('node-ids').value);
+  await localPost('/local/acceptance/start', {config: configValue, node_ids: ids});
+  $('acceptance-output').textContent = '验收已启动，正在部署新 Lyquid…';
+  const deadline = Date.now() + 12 * 60 * 1000;
+  while (Date.now() < deadline) {
+    const result = await fetch('/local/acceptance/status').then(response => response.json());
+    $('acceptance-output').textContent = result.lines.join('\n') || '验收正在运行…';
+    $('acceptance-output').scrollTop = $('acceptance-output').scrollHeight;
+    if (result.done) {
+      if (result.exit_code !== 0) throw new Error('验收未通过，请查看上方输出');
+      await refreshAll();
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  throw new Error('验收运行超过 12 分钟，请检查本地服务');
 }
 function bind() {
   $('wallet-button').addEventListener('click', () => run('连接钱包', connectWallet));
   $('refresh-all-button').addEventListener('click', () => run('刷新全部状态', refreshAll));
+  $('deploy-button').addEventListener('click', () => run('新建演示部署', deployLocal));
+  $('acceptance-button').addEventListener('click', () => run('完整四节点验收', runAcceptance));
   $('observe-all-button').addEventListener('click', () => run('四节点观察', observeAll));
   $('certify-button').addEventListener('click', () => run('认证', certify));
   $('claim-button').addEventListener('click', () => run('领取', claim));
@@ -320,4 +403,4 @@ function bind() {
   });
 }
 loadConfig(); bind(); render();
-run('初始连接', refreshAll);
+bootstrapLocal().then(() => run('初始连接', refreshAll));

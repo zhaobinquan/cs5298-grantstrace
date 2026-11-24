@@ -19,13 +19,13 @@
     <main>
       <section class="intro">
         <div><p class="eyebrow">LIVE DEVNET / 4 NODES</p><h1>让开源发布记录<br><em>变成可信的资助依据。</em></h1><p class="lead">四个节点独立观察 GitHub Releases。至少三个节点认可同一候选后，认证快照写入共享状态，受益账户才能领取积分。</p></div>
-        <div class="hero-aside"><span>当前工作流</span><div class="flow"><b>01 观察</b><i></i><b>02 认证</b><i></i><b>03 领取</b></div><p>这个页面直接连接本地 Lyquor RPC。写入共享状态的操作由浏览器钱包签名。</p></div>
+        <div class="hero-aside"><span>当前工作流</span><div class="flow"><b>01 观察</b><i></i><b>02 认证</b><i></i><b>03 领取</b></div><p>这个页面直接连接本地 Lyquor RPC。写入共享状态的操作由本地测试账户或浏览器钱包签名。</p></div>
       </section>
 
       <section class="settings panel" aria-labelledby="connection-title">
-        <div class="section-head"><div><p class="eyebrow">CONNECTION</p><h2 id="connection-title">连接本地部署</h2></div><button id="refresh-all-button" class="button primary" type="button">刷新全部状态</button></div>
+        <div class="section-head"><div><p class="eyebrow">CONNECTION</p><h2 id="connection-title">连接本地部署</h2></div><div class="head-buttons"><button id="deploy-button" class="button secondary" type="button">新建演示部署</button><button id="refresh-all-button" class="button primary" type="button">刷新全部状态</button></div></div>
         <div class="settings-grid"><label class="field span-2">Lyquid 合约地址<input id="contract-address" spellcheck="false" autocomplete="off" placeholder="0x…，来自 shaker deploy"></label><label class="field">节点 1 RPC<input id="rpc-0" spellcheck="false"></label><label class="field">节点 2 RPC<input id="rpc-1" spellcheck="false"></label><label class="field">节点 3 RPC<input id="rpc-2" spellcheck="false"></label><label class="field">节点 4 RPC<input id="rpc-3" spellcheck="false"></label></div>
-        <p class="hint">默认连接本机 10087、11087、12087、13087 端口。部署地址会保存在此浏览器中。</p>
+        <p class="hint">默认连接本机 10087、11087、12087、13087 端口。部署地址会保存在此浏览器中。点击“新建演示部署”会创建全新 Lyquid，原部署不会被覆盖。</p>
       </section>
 
       <section class="metrics" aria-label="共享状态概要">
@@ -46,9 +46,11 @@
       </div>
 
       <div class="two-column lower">
-        <section class="panel" aria-labelledby="snapshot-title"><div class="section-head"><div><p class="eyebrow">CERTIFIED RESULT</p><h2 id="snapshot-title">共享快照与领取</h2></div><span id="claim-status" class="badge muted">未读取</span></div><div id="snapshot-content" class="empty">最终认证结果会保存在 Network State。</div><div class="action-row"><button id="claim-button" class="button secondary" type="button">用当前钱包领取积分</button></div></section>
-        <section class="panel" aria-labelledby="admin-title"><div class="section-head"><div><p class="eyebrow">ADMIN OPERATIONS</p><h2 id="admin-title">初始化与新轮次</h2></div></div><details><summary>资助配置</summary><label class="field">GrantConfig JSON<textarea id="grant-config" rows="11" spellcheck="false"></textarea></label><button id="configure-grant-button" class="button secondary" type="button">钱包签名配置</button></details><details><summary>委员会配置与激活</summary><label class="field">四个 Node ID 的 JSON 数组<textarea id="node-ids" rows="5" spellcheck="false" placeholder='["Node-…", "Node-…", "Node-…", "Node-…"]'></textarea></label><button id="configure-committee-button" class="button secondary" type="button">钱包签名配置委员会</button><label class="field">Lyquid LVM 目标地址<input id="lyquid-target" spellcheck="false" placeholder="shaker to-hex LYQUID_ID 的输出"></label><button id="activate-committee-button" class="button secondary" type="button">推进并激活委员会 epoch</button></details><div class="action-row"><button id="start-round-button" class="button secondary" type="button">开启下一轮</button></div><p class="hint">管理员钱包必须是部署者。每笔交易结束后页面会查询实际状态，而不只看交易回执。</p></section>
+        <section class="panel" aria-labelledby="snapshot-title"><div class="section-head"><div><p class="eyebrow">CERTIFIED RESULT</p><h2 id="snapshot-title">共享快照与领取</h2></div><span id="claim-status" class="badge muted">未读取</span></div><div id="snapshot-content" class="empty">最终认证结果会保存在 Network State。</div><div class="action-row"><button id="claim-button" class="button secondary" type="button">领取积分</button></div></section>
+        <section class="panel" aria-labelledby="admin-title"><div class="section-head"><div><p class="eyebrow">ADMIN OPERATIONS</p><h2 id="admin-title">初始化与新轮次</h2></div></div><details><summary>资助配置</summary><label class="field">GrantConfig JSON<textarea id="grant-config" rows="11" spellcheck="false"></textarea></label><button id="configure-grant-button" class="button secondary" type="button">配置资助</button></details><details><summary>委员会配置与激活</summary><label class="field">四个 Node ID 的 JSON 数组<textarea id="node-ids" rows="5" spellcheck="false" placeholder='["Node-…", "Node-…", "Node-…", "Node-…"]'></textarea></label><button id="configure-committee-button" class="button secondary" type="button">配置委员会</button><label class="field">Lyquid LVM 目标地址<input id="lyquid-target" spellcheck="false" placeholder="shaker to-hex LYQUID_ID 的输出"></label><button id="activate-committee-button" class="button secondary" type="button">推进并激活委员会 epoch</button></details><div class="action-row"><button id="start-round-button" class="button secondary" type="button">开启下一轮</button></div><p class="hint">管理员账户必须是部署者。每笔交易结束后页面会查询实际状态，而不只看交易回执。</p></section>
       </div>
+
+      <section class="panel acceptance" aria-labelledby="acceptance-title"><div class="section-head"><div><p class="eyebrow">ACCEPTANCE</p><h2 id="acceptance-title">完整任务验收</h2><p class="subhead">全新部署验证两节点拒绝、三节点认证、合格领取、越权和重复领取，以及不合格快照不能领取。</p></div><button id="acceptance-button" class="button primary" type="button">运行真实四节点验收</button></div><p class="hint">该操作会创建两份新部署并调用真实 GitHub API。请先确认下方资助配置使用历史窗口、受益人为本地测试账户；GitHub 限流时会明确显示失败。</p><pre id="acceptance-output" class="acceptance-output" aria-live="polite">尚未运行。</pre></section>
 
       <section class="panel log-panel" aria-labelledby="log-title"><div class="section-head"><div><p class="eyebrow">ACTIVITY</p><h2 id="log-title">操作记录</h2></div><button id="clear-log-button" class="button text" type="button">清空</button></div><ol id="activity-log" aria-live="polite"><li>准备连接本地节点。</li></ol></section>
     </main>

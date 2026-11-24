@@ -1,24 +1,26 @@
 # GrantsTrace 本地演示前端
 
-这个页面直接调用当前 Lyquid 的四个 HTTP JSON-RPC 端点，无需 npm 构建或中间服务。仓库中的 `feature/frontend` 基于 `feature/b-integration`；本地 devnet 需要运行包含 B/C 联调接口的 Lyquid，单独的 `main` 占位版本不能提供完整流程。
+此分支包含 A、B、C 当前接口和本地演示页面。只适用于本机四节点 Anvil devnet，不连接真实资金账户。
 
 ## 启动
 
-在仓库根目录运行：
+先启动 Docker Desktop 和四节点 Lyquor devnet，然后在仓库根目录运行：
 
 ```bash
-python3 -m http.server 4173 --directory frontend
+bash scripts/frontend.sh
 ```
 
-打开 `http://127.0.0.1:4173/`。页面默认填写本次四节点实验的端口与 Lyquid 地址；若 devnet 重建，请将地址改为新的 `shaker deploy` 输出。节点 RPC 必须允许浏览器跨域请求；本地 Lyquor 0.8.4 的 `/api` 已返回 `Access-Control-Allow-Origin: *`。
+打开 `http://127.0.0.1:4173/`。服务只监听 `127.0.0.1`，检查本地链 ID 为 31337；标准 Anvil 测试账户在服务端签名，私钥不会发送到浏览器。浏览器钱包仍可在直接静态托管页面时使用，但完整的本地部署和验收按钮需要上述启动方式。运行前确认 `cast`、`shaker`、Python 3 均可用。
 
-## 功能
+## 页面流程
 
-- 读取 `get_grant_status`、`get_committee_status`、四节点 `get_observation` 与已就绪节点的 `get_candidate`。
-- 对单节点或四节点依次调用 `refresh_observation`，从节点 1 调用 `request_certification`，并轮询最终快照。
-- 通过 EIP-1193 浏览器钱包调用 `configure_grant`、`configure_committee`、`start_round` 和 `claim`；委员会 epoch 激活调用 LDK 的 `__lyquor_oracle_advance_epoch`、`__lyquor_oracle_finalize_epoch`。激活所需 LVM 地址由 `shaker to-hex LYQUID_ID` 得到。
-- 写操作以最终查询到的业务状态为准。`eth_sendTransaction` 返回哈希或 receipt 成功不代表 Lyquid 异步业务函数已经执行成功。
+1. 点击“新建演示部署”。页面自动填入合约地址和 Lyquid LVM 目标地址；也可填写已有部署的地址。
+2. 展开“资助配置”，核对真实 GitHub 仓库、repo_id、已结束的 UTC 秒窗口、门槛和受益人，点击配置。页面默认使用 `jqlang/jq` 的历史测试窗口，并自动设置本地测试受益人。
+3. 展开“委员会配置与激活”。页面自动读取四个实际 Node ID；先配置，再推进并激活 epoch。
+4. 开启轮次，依次刷新四节点观察。候选区域显示每条 Release 与正式版本数。
+5. 发起 3/4 认证；页面轮询共享快照，再领取一次积分。重复领取会显示错误，积分不会重复增加。
+6. “完整任务验收”使用 C 的 `scripts/test_devnet.py` 新建两份部署，检验两节点不足阈值、三节点认证、越权、重复领取、合格及不合格快照。运行会访问真实 GitHub；遇到限流会明确失败，不会伪称通过。
 
-首次演示建议使用现有部署，只读查看四节点和快照；配置、轮次和领取按钮会实际修改本地 devnet。页面不存储私钥，钱包账户须是本地 devnet 部署者或配置的受益人。资助配置文本是可编辑示例，请核对仓库 ID、时间窗口与受益地址后再签名。
+读操作直接调用四个节点的 HTTP JSON-RPC；本地签名服务只允许固定合约方法，拒绝其他来源的写请求。提交交易后仍轮询业务状态，不把 receipt 成功当成业务成功。演示服务签名使用标准公开测试助记词或环境中的 `ADMIN_KEY`、`BENEFICIARY_KEY`；**不得用于公网或真实账户**。
 
-此页面仅用于本机四节点演示。公网托管页面无法直接连接用户电脑的 `127.0.0.1` 节点；要远程使用须另行部署可访问的 RPC 并做好访问控制。
+本地界面不是公网网站。公网托管页面不能访问访问者电脑的 `127.0.0.1` 节点，远程使用须另行配置可访问 RPC 和权限控制。
