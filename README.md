@@ -1,8 +1,15 @@
 # GrantsTrace — 开源发布活动认证与资助资格索引器
 
-CS5298 三人项目。B 的 PR #1 已将 GitHub 发布观察、候选验证、四节点委员会认证、共享快照和一次领取整合进 `main`（合并提交 `5ed4fb1`）。2026-11-22 在本地四节点 devnet 跑通正例、空窗口、低于阈值拒绝和领取错误路径。详细记录见 [B 的贡献与验证](docs/contribution-b.md)。C 已在包含 A 的 B 集成提交 `47eb9cb` 上接手完善，补充修改放在 `feature/c-integration` 分支供 PR 审阅，尚未合并到 `main`。C 的代码、脚本及本机验证见 [C 的贡献记录](docs/contribution-c.md)。
+CS5298 三人项目。A 的 GitHub 发布观察、B 的候选验证与四节点认证、C 的资助状态与一次领取均已合入 `main`。本地四节点 devnet 已验证合格、不合格及拒绝路径；各成员的实现与测试记录见 `docs/contribution-*.md`。
 
-`feature/frontend` 分支包含 C 的当前集成代码，并增加了[本地演示页面](frontend/README.md)。页面可新建部署、查看四节点观察与认证快照、完成配置和领取，并运行真实四节点验收脚本；本地演示服务使用标准 devnet 测试账户签名。
+`main` 还包含[英文本地演示页面](frontend/README.md)。页面可新建部署、查看四节点观察与认证快照、完成配置和领取，并运行真实四节点验收脚本；本地演示服务使用标准 devnet 测试账户签名。
+
+## English demo video
+
+- [Watch the 66-second demo (English UI, male narration, English captions)](demo/GrantsTrace-demo-English-male-voice.mp4)
+- [Download the English subtitle file](demo/GrantsTrace-English.srt)
+
+The video shows an eligible grant with two stable releases and a 3-of-4 certification, followed by an ineligible grant with zero releases and a rejected claim. Credits are local demo values, not real funds.
 
 ## 三个人在哪里写代码
 
@@ -53,7 +60,7 @@ C 的 Ubuntu 已构建成功，产物为 lyquid_tools_target/release/cs5298-gran
 
 ## Git 协作
 
-B 的 PR #1 已通过 merge commit 合并到 `main`，远端 B 分支保留。C 的补充修改使用 `feature/c-integration` 分支提交 PR，待团队审核后再决定合并。推送被拒时先同步和解决冲突，禁止 force push。
+A、B、C 与英文前端的已审阅集成提交均在 `main`。推送被拒时先同步和解决冲突，禁止 force push。
 
 本仓库由 C 初始化和首次推送，A/B 接受协作邀请后 clone 同一仓库，不再各自生成模板。第一次推送前检查 git diff --cached，确保没有个人 token、私钥或节点数据。
 
