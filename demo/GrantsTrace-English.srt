@@ -1,0 +1,32 @@
+1
+00:00:00,273 --> 00:00:07,011
+This is GrantsTrace. It turns GitHub release history into a verifiable grant decision.
+
+2
+00:00:07,011 --> 00:00:16,028
+The grant administrator sets a repository, a time window, and a threshold. Here, jq needs two stable releases.
+
+3
+00:00:16,028 --> 00:00:24,099
+Four local nodes independently fetch GitHub releases. Only a candidate prepared for this round can be certified.
+
+4
+00:00:24,099 --> 00:00:32,324
+At least three nodes must agree. The certified snapshot shows two stable releases, so this grant qualifies.
+
+5
+00:00:32,324 --> 00:00:41,019
+The designated beneficiary claims one hundred demo credits once. A second claim is rejected. No real money is involved.
+
+6
+00:00:41,019 --> 00:00:48,477
+Now we inspect another certified deployment. Octocat's Hello World has no releases in the same time window.
+
+7
+00:00:48,477 --> 00:00:56,569
+Its stable release count is zero, below the threshold of two. The grant is ineligible, and claiming is rejected.
+
+8
+00:00:56,569 --> 00:01:06,000
+GrantsTrace links independent observation, three of four certification, and one time credit claims under a fixed rule.
+
