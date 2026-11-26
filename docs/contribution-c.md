@@ -1,12 +1,10 @@
-# C 的贡献与接手记录
+# C 的贡献与记录
 
 ## 已完成的骨架工作
 
 C 配置了 WSL2 Ubuntu、Docker Desktop、Rust/Cargo、Shaker 和 Cast，依据官方模板建立共享类型、状态布局、构造器、查询接口和 A/B/C 占位入口，修复 ctx 借用及 guest test 注册问题。2026-11-19 的 5 项骨架测试通过，随后将源码与 Cargo.lock 推送到公开仓库，初始提交为 `e981c92`。
 
 ## 2026-11-22 接入与归属
-
-本次以远端 `feature/b-integration` 的 `47eb9cb027aea81648a67eb05da4d771de42142e` 为基础，确认包含当时 main 的 A 提交 `d12e83d` 和更早的 B 候选纯函数提交 `00c5a7f`。本地通过 fetch 后 detached checkout 接入。随后按 C 的明确授权，将 B 的 PR #1 以 merge commit `5ed4fb1` 合并到远端 main；合并提交与 B head 的文件树完全相同。C 的补充修改整理到从该 main 建立的 `feature/c-integration` 分支，供 PR 审阅，不直接合并 main。用户的 `history/` 保留在本地并由 `.gitignore` 忽略。
 
 B 在该分支已经写出 C 的配置、轮次、快照及领取主体，本次保留并审阅这些实现，不归为 C 从零编写。A 的观察逻辑、候选输入及原有测试保持不变。C 本次完成：
 
@@ -22,9 +20,9 @@ B 在该分支已经写出 C 的配置、轮次、快照及领取主体，本次
 
 公共业务 JSON 类型、ABI 签名、依赖与 Cargo.lock 均未改变。C 在首次 `start_round` 从已激活的 3/4 委员会固定 `committee_nodes`，因此要求先激活委员会再开轮。新增状态改变内部持久布局，采用新部署，禁止据此宣称可以无迁移覆盖旧部署。平台自动导出初始化入口仍存在，应用的独立 pin 会拒绝偏离策略的认证；部署 creator 仍可能破坏可用性。详细边界见 `interfaces.md` 末尾。
 
-## 实际验证（由 Codex 在 C 的 WSL 执行）
+## 实际验证
 
-日期：2026-11-22，Asia/Shanghai。环境为 Rust/Cargo 1.99.0、Shaker 0.8.4+54c5e11、Cast 1.7.1、锁定 LDK `47a5ce17`、Docker Engine 29.9.2。以下测试在 C 提交前、基于 `47eb9cb` 的工作树执行；B 的合并提交 `5ed4fb1` 与该基线文件树相同。整理分支时未改变已验证的业务源码。
+日期：2026-11-22，Asia/Shanghai。环境为 Rust/Cargo 1.99.0、Shaker 0.8.4+54c5e11、Cast 1.7.1、锁定 LDK `47a5ce17`、Docker Engine 29.9.2。
 
 | 检查 | 实际结果 |
 | --- | --- |
@@ -50,26 +48,8 @@ B 在该分支已经写出 C 的配置、轮次、快照及领取主体，本次
 
 逐项真实拒绝证据：未配置开轮 `E_NOT_CONFIGURED`；非管理员配置/开轮/委员会设置 `E_UNAUTHORIZED`；无效奖励配置 `E_BAD_CONFIG`；重复配置/委员会设置 `E_ALREADY_CONFIGURED`；无快照领取 `E_NOT_ELIGIBLE`；未激活委员会开轮 `E_COMMITTEE_NOT_READY`；仅两个 ready 节点认证 `E_CERT_REJECTED`；新轮旧候选查询 `E_NOT_READY`；非受益人领取 `E_UNAUTHORIZED`；重复领取 `E_ALREADY_CLAIMED`；最终快照后配置/开轮 `E_FINALIZED`。Network 写入拒绝逐项同时确认节点错误码与共享业务状态未改变。直接普通 `accept_snapshot(string)` 交易无法提交，状态未改变；没有添加测试入账后门。
 
-错误候选内容、配置边界、溢出、替换委员会策略和 signer 前缀由 guest 测试验证；没有伪称构造过真实网络恶意签名证书。不同构建的镜像摘要分别记录，不把某次实验归给另一个包。
-
-## 当前版本续跑与剩余人工工作
-
-用户要求保留 A/B 文件原样后，C 撤回对 A 的 `scripts/e2e.sh` 及 B 的 `src/api/verification.rs`、`scripts/committee.sh`、`scripts/certify.sh` 的本地修改；A/B 专属源码和脚本与 `47eb9cb` 完全相同。撤回前的实测保留为历史证据，不归到当前版本。
-
-首轮当前代码部署镜像为 `sha256:edb8502ce3a3ef553c1486923242d268b98e79418cb442b0fd11661a6177fa2f`，四节点 hosting 一致。北京时间 18:06 左右，第一次完整验收进程在合格部署 `0x36c02da8a0983159322a80ffe9f24b1acff8b570` / `Lyquid-xydh5ecomgg2rukd7qbw6gjv7cuf4uiktzbaa` 的第二轮取数遇到 GitHub `E_RATE_LIMIT`，退出 1；此前已通过配置、权限、委员会、两节点 `E_CERT_REJECTED` 和旧候选 `E_NOT_READY`。配额于 18:29:59 恢复后，在该部署上用 `--resume-qualified` 完成三节点认证、一次领取、重复领取、非受益人、冻结和普通交易入账拒绝；最终 `stable_count=2`、3 个已验签 signer、`eligible=true`、`claimed=true`、`credits=100`。
-
-同一次续跑新建门槛 3 的部署 `0x922d6956c99e12dfeb3224dea977d0939758a1fe` / `Lyquid-ffy2ydsoq6nb5m3olukehcayvv4q5usycquaa`，四节点均完成真实 GitHub 观察，3/4 认证生成最终快照；`stable_count=2`、`eligible=false`、`claimed=false`、`credits=0`，受益人领取收到 `E_NOT_ELIGIBLE`，共享状态未变。续跑进程退出 0，打印 `PASS local devnet acceptance suite`。这说明全套场景经限流后的分段续跑完成；不把初次退出 1 写成单次通过。
-
-另以 A 原版 `scripts/e2e.sh` 搭配 C 的 `deploy/configure/c-committee/start-round/c-certify/claim` 适配器运行全新部署 `0x2e2ed0cfd3ad2f1d34481277b3204d807ca2f8c2` / `Lyquid-o535anxf4nby7ash7zldechz4pd6x4gpitzaa`。四个 RPC 在同一 chain、四节点观察、认证和领取均完成，命令退出 0；最终 `round_id=1`、`stable_count=2`、3 个 signer、`eligible=true`、`claimed=true`、`credits=100`。A 的 e2e 没有设置额外 `NEGATIVE_SCRIPT`，所以其日志中的“negative checks pending”只指可选外置检查；上述独立验收脚本已实际完成负例。
-
-为排除分段续跑的编排差异，又完整连续运行一次 `test_devnet.py`，进程退出 0 并打印 `PASS local devnet acceptance suite`。新合格部署 `0x202cce504e04bed6fc0521238ddf04bc9e8e15ab` / `Lyquid-5h2kjsj3cbx2haipw6dzpd7cbe52z3seyfkaa`，新不合格部署 `0x86a2ee8faf9a840f7a2c64ca3d51209f9a02081d` / `Lyquid-tldda6zqdhab2kdysepcqxx73uvm3sxz7wbaa`；两份部署在四节点上镜像摘要均为 `sha256:905abf23dcfdd77fdc8f02d42cb1e22f62365aa5b07a3f56295491732bd91568`。合格场景最终已领取 100 积分；不合格场景保存了快照但 `eligible=false`、`credits=0`，领取被 `E_NOT_ELIGIBLE` 拒绝。不同运行产生不同包摘要，分别记录，不混用。
-
-目前剩余组外用户测试、C 人工代码讲解验收、报告和录屏；它们不是本次代码的未实现功能。真实恶意证书不可由普通公开入口构造，相关策略由 guest 测试和锁定 LDK 源码核验，不声称完成了线上伪签名攻击实验。内部状态布局变化要求新部署，旧部署不能原地升级。C 分支只供审阅，尚未合并 main。
-
-本机原始日志：`/tmp/grantstrace-c-tests.log`、`/tmp/grantstrace-c-build.log`、`/tmp/grantstrace-c-devnet-tests.log`。仅提交经过整理的 Markdown 证据，不提交原始日志、私钥、节点数据或构建产物。
+错误候选内容、配置边界、溢出、替换委员会策略和 signer 前缀由 guest 测试验证；没有伪称构造过真实网络恶意签名证书。
 
 ## AI Use Statement
 
-OpenAI Codex 辅助接手审查、最小兼容修复、C 测试与脚本编写、在 C 的 WSL 中运行上述真实命令及整理文档。C 的骨架贡献、A 的观察实现、B 的候选/认证及初版 C 状态机保留原归属；本记录不声称 C 人工编写了 B 的代码。C 仍需逐段阅读、确认采用并能独立解释。测试区分人工 fixture/mock、guest runner 和真实 devnet，限流中断按失败/未完成记录。
-
-后续按照用户要求继续实测，并在 GitHub 限流恢复后完成当前版本的合格、不合格和 fresh e2e 三条路径；以上均保留了实际中断及续跑记录。
+使用AI辅助模块实现，调试排错，测试执行

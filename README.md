@@ -1,14 +1,23 @@
 # GrantsTrace — 开源发布活动认证与资助资格索引器
 
-CS5298 三人项目。B 的 PR #1 已将 GitHub 发布观察、候选验证、四节点委员会认证、共享快照和一次领取整合进 `main`（合并提交 `5ed4fb1`）。2026-11-22 在本地四节点 devnet 跑通正例、空窗口、低于阈值拒绝和领取错误路径。详细记录见 [B 的贡献与验证](docs/contribution-b.md)。C 已在包含 A 的 B 集成提交 `47eb9cb` 上接手完善，补充修改放在 `feature/c-integration` 分支供 PR 审阅，尚未合并到 `main`。C 的代码、脚本及本机验证见 [C 的贡献记录](docs/contribution-c.md)。
+CS5298 三人项目。A 的 GitHub 发布观察、B 的候选验证与四节点认证、C 的资助状态与一次领取均已合入 `main`。本地四节点 devnet 已验证合格、不合格及拒绝路径；各成员的实现与测试记录见 `docs/contribution-*.md`。
 
-## 三个人在哪里写代码
+`main` 还包含[英文本地演示页面](frontend/README.md)。页面可新建部署、查看四节点观察与认证快照、完成配置和领取，并运行真实四节点验收脚本；本地演示服务使用标准 devnet 测试账户签名。
+
+## English demo video
+
+- [Watch the 66-second demo (English UI, male narration, English captions)](demo/GrantsTrace-demo-English-male-voice.mp4)
+- [Download the English subtitle file](demo/GrantsTrace-English.srt)
+
+The video shows an eligible grant with two stable releases and a 3-of-4 certification, followed by an ineligible grant with zero releases and a rejected claim. Credits are local demo values, not real funds.
+
+## 成员代码位置
 
 | 成员 | 普通 Rust 逻辑 | Lyquor 对外入口 |
 | --- | --- | --- |
-| A | src/observations.rs | src/api/observations.rs |
-| B | src/verification.rs | src/api/verification.rs |
-| C | src/grants.rs | src/api/grants.rs |
+| A(60948290 Xingyi Liu) | src/observations.rs | src/api/observations.rs |
+| B(60210283 Qianneng Tang) | src/verification.rs | src/api/verification.rs |
+| C(60713255 Binquan Zhao) | src/grants.rs | src/api/grants.rs |
 
 公共文件 src/model.rs、src/lib.rs、Cargo.toml、Cargo.lock 由 C 维护。字段与签名见 [接口契约](docs/interfaces.md)。
 
@@ -51,7 +60,7 @@ C 的 Ubuntu 已构建成功，产物为 lyquid_tools_target/release/cs5298-gran
 
 ## Git 协作
 
-B 的 PR #1 已通过 merge commit 合并到 `main`，远端 B 分支保留。C 的补充修改使用 `feature/c-integration` 分支提交 PR，待团队审核后再决定合并。推送被拒时先同步和解决冲突，禁止 force push。
+A、B、C 与英文前端的已审阅集成提交均在 `main`。推送被拒时先同步和解决冲突，禁止 force push。
 
 本仓库由 C 初始化和首次推送，A/B 接受协作邀请后 clone 同一仓库，不再各自生成模板。第一次推送前检查 git diff --cached，确保没有个人 token、私钥或节点数据。
 
@@ -62,7 +71,4 @@ B 的 PR #1 已通过 merge commit 合并到 `main`，远端 B 分支保留。C 
 - [方法与上下文](https://docs.lyquor.dev/docs/ldk/functions/)
 - [认证调用机制](https://docs.lyquor.dev/docs/ldk/oracle/)
 - 项目业务类型和签名来自三人实施方案第 8 节。
-- 本骨架由 AI 辅助生成。成员须审阅、运行验证并记录自己实际完成的修改。部署与多节点验证的实际结果已单独记录；报告应区分单元测试与 devnet 实验。
-
-
-2026-11-22 C 接手阶段使用 OpenAI Codex 辅助源码审阅、实现、脚本与验证。保留 A/B 原贡献归属；本轮实际执行证据和人工审阅待办集中在 `docs/contribution-c.md`，不把自动执行等同于成员已理解或人工验收。
+- 本项目由 AI 辅助生成。成员须审阅、运行验证并记录自己实际完成的修改。部署与多节点验证的实际结果已单独记录；报告应区分单元测试与 devnet 实验。
