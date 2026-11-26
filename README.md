@@ -11,13 +11,13 @@ CS5298 三人项目。A 的 GitHub 发布观察、B 的候选验证与四节点�
 
 The video shows an eligible grant with two stable releases and a 3-of-4 certification, followed by an ineligible grant with zero releases and a rejected claim. Credits are local demo values, not real funds.
 
-## 三个人在哪里写代码
+## 成员代码位置
 
 | 成员 | 普通 Rust 逻辑 | Lyquor 对外入口 |
 | --- | --- | --- |
-| A | src/observations.rs | src/api/observations.rs |
-| B | src/verification.rs | src/api/verification.rs |
-| C | src/grants.rs | src/api/grants.rs |
+| A(60948290 Xingyi Liu) | src/observations.rs | src/api/observations.rs |
+| B(60210283 Qianneng Tang) | src/verification.rs | src/api/verification.rs |
+| C(60713255 Binquan Zhao) | src/grants.rs | src/api/grants.rs |
 
 公共文件 src/model.rs、src/lib.rs、Cargo.toml、Cargo.lock 由 C 维护。字段与签名见 [接口契约](docs/interfaces.md)。
 
@@ -71,7 +71,4 @@ A、B、C 与英文前端的已审阅集成提交均在 `main`。推送被拒时
 - [方法与上下文](https://docs.lyquor.dev/docs/ldk/functions/)
 - [认证调用机制](https://docs.lyquor.dev/docs/ldk/oracle/)
 - 项目业务类型和签名来自三人实施方案第 8 节。
-- 本骨架由 AI 辅助生成。成员须审阅、运行验证并记录自己实际完成的修改。部署与多节点验证的实际结果已单独记录；报告应区分单元测试与 devnet 实验。
-
-
-2026-11-22 C 接手阶段使用 OpenAI Codex 辅助源码审阅、实现、脚本与验证。保留 A/B 原贡献归属；本轮实际执行证据和人工审阅待办集中在 `docs/contribution-c.md`，不把自动执行等同于成员已理解或人工验收。
+- 本项目由 AI 辅助生成。成员须审阅、运行验证并记录自己实际完成的修改。部署与多节点验证的实际结果已单独记录；报告应区分单元测试与 devnet 实验。
